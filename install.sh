@@ -1,12 +1,11 @@
 #!/bin/bash
 # ============================================================
 # INSTALLER OTOMATIS - GitHub Manager Bot (VPS Ubuntu/Debian)
-# Jalankan: sudo bash install.sh
+# Versi visible token: biar keliatan pas ngetik, gak hidden
 # ============================================================
 
 set -e
 
-# ---- Mode remote: download file dari GitHub jika dijalankan via curl ----
 REMOTE_URL=""
 if [ "$1" = "--remote" ]; then
   REMOTE_URL="$2"
@@ -20,17 +19,34 @@ if [ -n "$REMOTE_URL" ]; then
   git clone --depth 1 "$REMOTE_URL" "$APP_DIR"
 fi
 
-# ---- Minta token bot ----
+# ---- Minta token bot (visible, biar tau kalo salah ketik) ----
 if [ -z "$TG_TOKEN" ]; then
-  read -p "Masukkan token bot Telegram (dari @BotFather): " TG_TOKEN
+  echo ""
+  echo "🔑 Token bot belum di-set"
+  echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+  # Baca dari /dev/tty biar work walau pake curl | bash
+  if [ -e /dev/tty ]; then
+    read -p "Masukkan token bot Telegram (dari @BotFather): " TG_TOKEN < /dev/tty
+  else
+    read -p "Masukkan token bot Telegram (dari @BotFather): " TG_TOKEN
+  fi
 fi
-if [ ! "$TG_TOKEN" ]; then
-  echo "❌ Token tidak boleh kosong!"; exit 1
+
+if [ -z "$TG_TOKEN" ]; then
+  echo "❌ Token tidak boleh kosong!"
+  exit 1
 fi
+
+echo "✅ Token diterima: ${TG_TOKEN:0:10}...${TG_TOKEN: -5} (disensor dikit)"
 
 SERVICE_NAME="github-bot"
 
-# ---- Cek & install Node.js 20 ----
+# ---- Cek & install git + Node.js 20 ----
+if ! command -v git &>/dev/null; then
+  echo "📦 Menginstall git..."
+  apt-get update -y && apt-get install -y git
+fi
+
 if ! command -v node &>/dev/null || [ "$(node -v | cut -dv -f2 | cut -d. -f1)" -lt 18 ]; then
   echo "📦 Menginstall Node.js 20..."
   curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
@@ -74,13 +90,8 @@ if systemctl is-active --quiet ${SERVICE_NAME}; then
   echo "=========================================="
   echo "✅ BOT BERHASIL DIJALANKAN!"
   echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-  echo "Bot tahan 24 jam & auto-start saat reboot."
-  echo ""
-  echo "Perintah berguna:"
-  echo "  systemctl status ${SERVICE_NAME}   ← cek status"
-  echo "  journalctl -u ${SERVICE_NAME} -f   ← lihat log live"
-  echo "  systemctl restart ${SERVICE_NAME}  ← restart"
-  echo "  systemctl stop ${SERVICE_NAME}     ← matikan"
+  echo "  systemctl status ${SERVICE_NAME}"
+  echo "  journalctl -u ${SERVICE_NAME} -f"
   echo "=========================================="
 else
   echo "❌ Bot gagal start. Cek log: journalctl -u ${SERVICE_NAME} -n 20"
