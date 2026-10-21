@@ -494,7 +494,7 @@ async function sendRepoMenu(chatId, token, page = 1) {
   const start = (page - 1) * perPage;
   const pageItems = all.slice(start, start + perPage);
   for (const r of pageItems) {
-    rows.push([btn(`${r.private ? '🔒' : '🌐'} ${r.name}`, `setrepo:${r.full_name}`), btn('ℹ️', `repodetail:${r.full_name}`), btn('🗑️', `confirm_del:${r.full_name}`)]);
+    rows.push([btn(`${r.private ? '🔒' : '🌐'} ${r.name}`, `setrepo:${r.full_name}`), btn('ℹ️ Detail', `repodetail:${r.full_name}`), btn('🗑️ Hapus', `confirm_del:${r.full_name}`)]);
   }
   const nav = [];
   if (page > 1) nav.push(btn('⬅️ Prev', `page:${page - 1}`));
@@ -525,7 +525,7 @@ async function sendFileMenu(chatId, repoName, token, path = '', page = 1) {
   if (!res.ok && res.status !== 404) throw new Error(`Gagal membaca repo (${res.status}).`);
   const rows = [];
   let listText = '';
-  if (path) rows.push([btn('⬅️ Up Folder', 'back_dir')]);
+  if (path) rows.push([btn('⬅️ Kembali (Up Folder)', 'back_dir')]);
   if (res.ok) {
     let items = await res.json();
     if (!Array.isArray(items)) items = [items];
@@ -534,12 +534,12 @@ async function sendFileMenu(chatId, repoName, token, path = '', page = 1) {
     const pageItems = items.slice(start, start + perPage);
     for (const item of pageItems) {
       if (item.type === 'dir') {
-        listText += `├ 📁 <b>${escapeHtml(item.name)}</b>\n`;
-        rows.push([btn(`📁 ${item.name}`, `open_dir:${item.path}`), btn('🗑️', `delfile:${item.path}`)]);
+        listText += ` ├ 📁 <b>${escapeHtml(item.name)}</b>\n`;
+        rows.push([btn(`📁 Buka [${item.name}]`, `open_dir:${item.path}`), btn(`🗑️ Hapus Folder`, `delfile:${item.path}`)]);
       } else if (item.name !== '.gitkeep') {
-        listText += `├ 📄 <code>${escapeHtml(item.name)}</code>\n`;
+        listText += ` ├ 📄 <code>${escapeHtml(item.name)}</code>\n`;
         rows.push([btn(`📄 ${item.name}`, `viewfile:${item.path}`)]);
-        rows.push([btn('✏️', `editfile:${item.path}`), btn('🔤', `renamefile:${item.path}`), btn('🗑️', `delfile:${item.path}`)]);
+        rows.push([btn(`✏️ Edit`, `editfile:${item.path}`), btn(`🔤 Rename`, `renamefile:${item.path}`), btn(`🗑️ Hapus`, `delfile:${item.path}`)]);
       }
     }
     const nav = [];
@@ -551,7 +551,7 @@ async function sendFileMenu(chatId, repoName, token, path = '', page = 1) {
   rows.push([btn('➕ Upload File / Foto', 'menu_tambah_global'), btn('📁 Buat Folder', 'menu_buat_folder')]);
   rows.push([btn('🔙 Ke Daftar Repo', 'goto_repomenu'), btn('📖 Bantuan', 'goto_help')]);
   const displayPath = path ? `/${path}` : '/ (Root)';
-  return sendReply(chatId, `🛠️ <b>WORKSPACE</b>\n━━━━━━━━━━━━━━━━━━━━\n📦 <code>${escapeHtml(repoName)}</code>\n📍 <code>${escapeHtml(displayPath)}</code>\n━━━━━━━━━━━━━━━━━━━━\n${listText}`, kb(rows));
+  return sendReply(chatId, `🛠️ <b>WORKSPACE MANAGER</b>\n━━━━━━━━━━━━━━━━━━━━\n📦 <b>Repo:</b> <code>${escapeHtml(repoName)}</code>\n📍 <b>Path:</b> <code>${escapeHtml(displayPath)}</code>\n━━━━━━━━━━━━━━━━━━━━\n<b>Isi Direktori:</b>\n${listText}\n<i>Klik nama file/folder untuk membuka item:</i>`, kb(rows));
 }
 
 async function sendViewFile(chatId, repoName, token, filePath) {
